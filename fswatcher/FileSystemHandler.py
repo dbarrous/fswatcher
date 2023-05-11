@@ -882,6 +882,15 @@ class FileSystemHandler(FileSystemEventHandler):
             end = time.time()
             log.info(f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}")
 
+            log.info("New fd Method - Checking for new files...")
+            start = time.time()
+            # Get list of all files in directory
+            all_files = self.walk_directory_find(
+                path, excluded_files=excluded_files, excluded_exts=excluded_exts
+            )
+            end = time.time()
+            log.info(f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}")
+
             # start = time.time()
             # log.info("Processing files...")
             # # Check for new, updated, and deleted files
