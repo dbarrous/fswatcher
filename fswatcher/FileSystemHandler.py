@@ -808,6 +808,25 @@ class FileSystemHandler(FileSystemEventHandler):
                 logging.info(f"File {file_path} not found")
 
         return all_files
+    
+    def walk_directory_fd(self, path, excluded_files=None, excluded_exts=None):
+        all_files = []
+        fd_command = ["fd", "-t", "f", ".", path]
+        result = subprocess.run(fd_command, stdout=subprocess.PIPE)
+        file_paths = result.stdout.decode().splitlines()
+
+        for file_path in file_paths:
+            if (excluded_files and file_path in excluded_files) or (
+                    excluded_exts and os.path.splitext(file_path)[1] in excluded_exts):
+                continue
+
+            try:
+                file_mtime = os.path.getmtime(file_path)
+                all_files.append((file_path, file_mtime))
+            except FileNotFoundError:
+                logging.info(f"File {file_path} not found")
+
+        return all_files
 
     def fallback_directory_watcher(self):
         path = "/watch"
