@@ -793,9 +793,13 @@ class FileSystemHandler(FileSystemEventHandler):
     def walk_directory_find(self, path, excluded_files=None, excluded_exts=None):
         all_files = []
         find_command = ["find", path, "-type", "f"]
+        log.info(f"Running command: {' '.join(find_command)}")
+        inner_start = time.time()
         result = subprocess.run(find_command, stdout=subprocess.PIPE)
         file_paths = result.stdout.decode().splitlines()
-
+        inner_end = time.time()
+        log.info(f"find command took {inner_end - inner_start} seconds")
+        log.info("Working on the files found by findd")
         for file_path in file_paths:
             if (excluded_files and file_path in excluded_files) or (
                     excluded_exts and os.path.splitext(file_path)[1] in excluded_exts):
@@ -806,15 +810,21 @@ class FileSystemHandler(FileSystemEventHandler):
                 all_files.append((file_path, file_mtime))
             except FileNotFoundError:
                 logging.info(f"File {file_path} not found")
-
+        inner_end = time.time()
+        log.info(f"Working on the files found by find took {inner_end - inner_start} seconds")
         return all_files
     
     def walk_directory_fd(self, path, excluded_files=None, excluded_exts=None):
         all_files = []
         fd_command = ["fd", "-t", "f", ".", path]
+        log.info(f"Running command: {' '.join(fd_command)}")
+        inner_start = time.time()
         result = subprocess.run(fd_command, stdout=subprocess.PIPE)
         file_paths = result.stdout.decode().splitlines()
-
+        inner_end = time.time()
+        log.info(f"fd command took {inner_end - inner_start} seconds")
+        log.info("Working on the files found by fd")
+        inner_start = time.time()
         for file_path in file_paths:
             if (excluded_files and file_path in excluded_files) or (
                     excluded_exts and os.path.splitext(file_path)[1] in excluded_exts):
@@ -825,7 +835,8 @@ class FileSystemHandler(FileSystemEventHandler):
                 all_files.append((file_path, file_mtime))
             except FileNotFoundError:
                 logging.info(f"File {file_path} not found")
-
+        inner_end = time.time()
+        log.info(f"Working on the files found by fd took {inner_end - inner_start} seconds")
         return all_files
 
     def fallback_directory_watcher(self):
