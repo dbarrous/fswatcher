@@ -25,7 +25,9 @@ from watchdog.events import (
 )
 from typing import List
 from fswatcher import log
-
+import subprocess
+import os
+import logging
 
 class FileSystemHandler(FileSystemEventHandler):
     """
@@ -787,6 +789,26 @@ class FileSystemHandler(FileSystemEventHandler):
 
         return all_files
 
+
+    def walk_directory_find(self, path, excluded_files=None, excluded_exts=None):
+        all_files = []
+        find_command = ["find", path, "-type", "f"]
+        result = subprocess.run(find_command, stdout=subprocess.PIPE)
+        file_paths = result.stdout.decode().splitlines()
+
+        for file_path in file_paths:
+            if (excluded_files and file_path in excluded_files) or (
+                    excluded_exts and os.path.splitext(file_path)[1] in excluded_exts):
+                continue
+
+            try:
+                file_mtime = os.path.getmtime(file_path)
+                all_files.append((file_path, file_mtime))
+            except FileNotFoundError:
+                logging.info(f"File {file_path} not found")
+
+        return all_files
+
     def fallback_directory_watcher(self):
         path = "/watch"
         check_interval = 5
@@ -823,7 +845,16 @@ class FileSystemHandler(FileSystemEventHandler):
             time.sleep(
                 check_interval
             )  # Wait for 60 seconds before checking for new files again
-            log.info("Checking for new files...")
+            log.info("Original - Checking for new files...")
+            start = time.time()
+            # Get list of all files in directory
+            all_files = self.walk_directory(
+                path, excluded_files=excluded_files, excluded_exts=excluded_exts
+            )
+            end = time.time()
+            log.info(f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}")
+
+            log.info("New Find Method - Checking for new files...")
             start = time.time()
             # Get list of all files in directory
             all_files = self.walk_directory(
