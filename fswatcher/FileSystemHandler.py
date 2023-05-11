@@ -901,7 +901,7 @@ class FileSystemHandler(FileSystemEventHandler):
             log.info("New fd Method - Checking for new files...")
             start = time.time()
             # Get list of all files in directory
-            all_files = self.walk_directory_find(
+            all_files = self.walk_directory_fd(
                 path, excluded_files=excluded_files, excluded_exts=excluded_exts, last_run=last_run
             )
             end = time.time()
