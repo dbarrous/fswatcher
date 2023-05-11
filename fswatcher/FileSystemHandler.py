@@ -817,10 +817,10 @@ class FileSystemHandler(FileSystemEventHandler):
     def walk_directory_fd(self, path, excluded_files=None, excluded_exts=None, last_run=None):
         all_files = []
         if last_run is None:
-            fd_command = ["fd", "-t", "f", "-x", "stat", "-c", "%n %Y", ".", path]
+            fd_command = ["fdfind", "-t", "f", "-x", "stat", "-c", "%n %Y", ".", path]
         else:
             time_since_last_run = int(time.time()) - last_run
-            fd_command = ["fd", "-t", "f", "--changed-within", f"{time_since_last_run}s", "-x", "stat", "-c", "%n %Y", ".", path]
+            fd_command = ["fdfind", "-t", "f", "--changed-within", f"{time_since_last_run}s", "-x", "stat", "-c", "%n %Y", ".", path]
 
         log.info(f"Running command: {' '.join(fd_command)}")
         inner_start = time.time()
