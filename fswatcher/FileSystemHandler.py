@@ -816,27 +816,28 @@ class FileSystemHandler(FileSystemEventHandler):
     
     def walk_directory_fd(self, path, excluded_files=None, excluded_exts=None):
         all_files = []
-        fd_command = ["fd", "-t", "f", ".", path]
+        fd_command = ["fd", "-t", "f", "-x", "stat", "-c", "%n %Y", ".", path]
         log.info(f"Running command: {' '.join(fd_command)}")
         inner_start = time.time()
         result = subprocess.run(fd_command, stdout=subprocess.PIPE)
-        file_paths = result.stdout.decode().splitlines()
+        output_lines = result.stdout.decode().splitlines()
         inner_end = time.time()
-        log.info(f"fd command took {inner_end - inner_start} seconds")
+        log.info(f"find command took {inner_end - inner_start} seconds")
         log.info("Working on the files found by fd")
-        inner_start = time.time()
-        for file_path in file_paths:
+        for line in output_lines:
+            file_path, file_mtime = line.split(' ', 1)
+            file_mtime = int(file_mtime)
+
             if (excluded_files and file_path in excluded_files) or (
                     excluded_exts and os.path.splitext(file_path)[1] in excluded_exts):
                 continue
 
             try:
-                file_mtime = os.path.getmtime(file_path)
                 all_files.append((file_path, file_mtime))
             except FileNotFoundError:
                 logging.info(f"File {file_path} not found")
         inner_end = time.time()
-        log.info(f"Working on the files found by fd took {inner_end - inner_start} seconds")
+        log.info(f"Working on the files found by find took {inner_end - inner_start} seconds")
         return all_files
 
     def fallback_directory_watcher(self):
