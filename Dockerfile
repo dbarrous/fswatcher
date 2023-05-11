@@ -5,7 +5,7 @@ FROM python:3.11
 
 # Install Curl, Unzip, and PostgreSQL client library
 RUN apt-get update  && \
-    apt-get install --no-install-recommends -y curl unzip libpq-dev gcc && \
+    apt-get install --no-install-recommends -y curl unzip libpq-dev gcc fd && \
     # Clean up
     rm -rf /var/lib/apt/lists/*
 
