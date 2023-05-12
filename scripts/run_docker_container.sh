@@ -149,6 +149,7 @@ docker run -d \
     -v /etc/passwd:/etc/passwd \
     -v $WATCH_DIR:/watch \
     -v ${HOME}/.aws/credentials:/root/.aws/credentials:ro \
+    --network=host \
     $IMAGE_NAME
 
 # Print the docker logs
