@@ -770,7 +770,7 @@ class FileSystemHandler(FileSystemEventHandler):
     def fallback_directory_watcher(self):
         path = "/watch"
 
-        all_files = []
+        all_files = set()
         last_run_timestamp_str = None
 
         # Initialize excluded_files and excluded_exts as empty lists
@@ -778,12 +778,10 @@ class FileSystemHandler(FileSystemEventHandler):
         excluded_exts = []
         if self.check_with_s3:
             log.info("Checking S3 bucket for existing files...")
-            all_files = set(self._get_s3_keys(self.bucket_name))
+            s3_set = set(self._get_s3_keys(self.bucket_name))
             log.info(
                 f"Found {len(all_files)} files in S3 bucket. Adding to db of existing files..."
             )
-            # all_files = self.process_files(conn, cur, s3_keys, True)
-
         log.info("Starting directory watcher...")
         if not self.check_path_exists(path):
             log.info("Path does not exist, exiting...")
@@ -798,6 +796,15 @@ class FileSystemHandler(FileSystemEventHandler):
         all_files = self.walk_directory_find(
             path, excluded_files=excluded_files, excluded_exts=excluded_exts
         )
+
+        if self.check_with_s3:
+            new_files, deleted_files = self.process_files(all_files, s3_set)
+        else:
+            new_files = all_files
+            deleted_files = set()
+
+        log.info(f"New files: {len(new_files)}")
+        log.info(f"Deleted files: {len(deleted_files)}")
 
         end = time.time()
         log.info(
