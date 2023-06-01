@@ -818,7 +818,10 @@ class FileSystemHandler(FileSystemEventHandler):
         log.info(
             f"Working on the files found by find took {inner_end - inner_start} seconds"
         )
-        # log.info(f"Found {len(all_files)} files")
+        # Log the first 10 files
+        log.info("First 10 files:")
+        for file_path, mtime in all_files[:10]:
+            log.info(f"{file_path} - {mtime}")
         return all_files
 
     def walk_directory_find_2(self, path, excluded_files=None, excluded_exts=None):
