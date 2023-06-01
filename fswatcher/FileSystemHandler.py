@@ -783,8 +783,7 @@ class FileSystemHandler(FileSystemEventHandler):
         inner_start = time.time()
         result = subprocess.run(find_command, stdout=subprocess.PIPE)
         output_lines = result.stdout.decode().splitlines()
-        for line in output_lines[:10]:
-            log.info(line)
+
         log.info(f"Found {len(output_lines)} files")
         inner_end = time.time()
         log.info(f"find command took {inner_end - inner_start} seconds")
@@ -803,11 +802,8 @@ class FileSystemHandler(FileSystemEventHandler):
         log.info(
             f"Working on the files found by find took {inner_end - inner_start} seconds"
         )
-        # Log the first 10 files
-        log.info("First 10 files:")
-        for file_path in all_files[:10]:
-            log.info(file_path)
-        return all_files
+
+        return set(all_files)
 
     def fallback_directory_watcher(self):
         path = "/watch"
@@ -832,19 +828,7 @@ class FileSystemHandler(FileSystemEventHandler):
         else:
             log.info(f"Monitoring path: {path}")
 
-        # # Wait for 60 seconds before checking for new files again
-        # log.info("Original - Checking for new files...")
-        # start = time.time()
-        # # Get list of all files in directory
-        # all_files = self.walk_directory(
-        #     path, excluded_files=excluded_files, excluded_exts=excluded_exts
-        # )
-        # end = time.time()
-        # log.info(
-        #     f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
-        # )
-
-        log.info("New Find Method - Checking for new files...")
+        log.info("Get initial Files")
         start = time.time()
         # Create a new file in the watch directory
         with open(os.path.join(path, "tests2.txt"), "w") as f:
@@ -853,46 +837,46 @@ class FileSystemHandler(FileSystemEventHandler):
         all_files = self.walk_directory_find(
             path, excluded_files=excluded_files, excluded_exts=excluded_exts
         )
+
         end = time.time()
         log.info(
             f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
         )
+        log.info("Get initial Files - Done")
 
-        log.info("New Find Method - Checking for modified files...")
-        start = time.time()
-        # Create a new file in the watch directory
-        with open(os.path.join(path, "tests.txt"), "w") as f:
-            f.write("Hello, World!")
+        # Loop starts
+        while True:
+            log.info("Get modified files")
+            start = time.time()
 
-        # deelte tests2.txt
-        os.remove(os.path.join(path, "tests2.txt"))
-        # Get list of all files in directory
-        modified_files = self.walk_directory_find(
-            path,
-            excluded_files=excluded_files,
-            excluded_exts=excluded_exts,
-        )
-        end = time.time()
-        log.info(
-            f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
-        )
+            # Get list of all files in directory
+            modified_files = self.walk_directory_find(
+                path,
+                excluded_files=excluded_files,
+                excluded_exts=excluded_exts,
+                within_minutes=1,
+            )
 
-        new_files, deleted_files = self.get_deleted(modified_files, all_files)
-        log.info(f"New files: {len(new_files)}")
-        log.info(f"Deleted files: {len(deleted_files)}")
+            log.info("Get Deleted files")
+            # Get list of all files in directory
+            files = self.walk_directory_find(
+                path,
+                excluded_files=excluded_files,
+                excluded_exts=excluded_exts,
+            )
+            new_files, deleted_files = self.process_files(files, all_files, True)
 
-        log.info("New Find Method - Checking for new files...")
-        start = time.time()
-        # Get list of all files in directory
-        deleted_new_files = self.walk_directory_find(
-            path,
-            excluded_files=excluded_files,
-            excluded_exts=excluded_exts,
-        )
-        end = time.time()
-        log.info(
-            f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
-        )
+            # Add modified files to new_files
+            new_files = new_files.union(modified_files)
+
+            log.info(f"New files: {len(new_files)}")
+            log.info(f"Deleted files: {len(deleted_files)}")
+
+            # Save new all_files
+            all_files = modified_files
+            end = time.time()
+            log.info(f"Time taken to process files: {end - start} seconds")
+            time.sleep(5)
 
         # start = time.time()
         # log.info("Processing files...")
