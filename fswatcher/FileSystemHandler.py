@@ -826,8 +826,8 @@ class FileSystemHandler(FileSystemEventHandler):
         )
         # Log the first 10 files
         log.info("First 10 files:")
-        for file_path, mtime in all_files[:10]:
-            log.info(f"{file_path} - {mtime}")
+        for file_path in all_files[:10]:
+            log.info(file_path)
         return all_files
 
     def fallback_directory_watcher(self):
