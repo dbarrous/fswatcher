@@ -798,9 +798,9 @@ class FileSystemHandler(FileSystemEventHandler):
         )
 
         if self.check_with_s3:
-            new_files, _ = self.process_files(all_files, s3_set)
+            new_files, deleted_files = self.process_files(all_files, s3_set)
         else:
-            new_files, _ = self.process_files(all_files, set())
+            new_files, deleted_files = self.process_files(all_files, set())
 
         deleted_files = []
 
@@ -843,9 +843,9 @@ class FileSystemHandler(FileSystemEventHandler):
             # Add modified files to new_files set
             new_files = new_files.union(modified_files)
 
+            self._dispatch_events(list(new_files), deleted_files)
             log.info(f"New files: {len(new_files)}")
             log.info(f"Deleted files: {len(deleted_files)}")
-
             # Remove deleted files from all_files
             all_files = all_files - deleted_files
             # Add new files to all_files
