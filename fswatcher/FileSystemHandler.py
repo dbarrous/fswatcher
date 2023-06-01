@@ -738,11 +738,8 @@ class FileSystemHandler(FileSystemEventHandler):
         return {row[0]: row[1] for row in cur.fetchall()}
 
     def process_files(self, new_files, old_files, modified_time_only=False):
-        new_files_set = set(new_files)
-        old_files_set = set(old_files)
-
-        deleted_files = set() if modified_time_only else old_files_set - new_files_set
-        new_files = new_files_set - old_files_set
+        deleted_files = set() if modified_time_only else old_files - new_files
+        new_files = new_files - old_files
 
         return new_files, deleted_files
 
