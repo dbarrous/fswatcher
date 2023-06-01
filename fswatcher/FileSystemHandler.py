@@ -886,6 +886,7 @@ class FileSystemHandler(FileSystemEventHandler):
 
         new_files, deleted_files = self.process_files(modified_files, all_files)
         log.info(f"New files: {len(new_files)}")
+        log.info(f"Deleted files: {len(deleted_files)}")
 
         log.info("New Find Method - Checking for new files...")
         start = time.time()
