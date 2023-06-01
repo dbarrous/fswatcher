@@ -738,19 +738,13 @@ class FileSystemHandler(FileSystemEventHandler):
         return {row[0]: row[1] for row in cur.fetchall()}
 
     def process_files(self, new_files, old_files):
-        # Compare old files with new files
-        deleted_files = []
-        for file_path in old_files:
-            if file_path not in new_files:
-                deleted_files.append(file_path)
+        new_files_set = set(new_files)
+        old_files_set = set(old_files)
 
-        # Compare new files with old files
-        new_files = []
-        for file_path in old_files:
-            if file_path not in new_files:
-                new_files.append(file_path)
+        deleted_files = old_files_set - new_files_set
+        new_files = new_files_set - old_files_set
 
-        return new_files, deleted_files
+        return list(new_files), list(deleted_files)
 
     def check_path_exists(self, path):
         if not Path(path).exists():
