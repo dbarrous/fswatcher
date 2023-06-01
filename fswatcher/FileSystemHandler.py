@@ -792,7 +792,17 @@ class FileSystemHandler(FileSystemEventHandler):
 
     def walk_directory_find(self, path, excluded_files=None, excluded_exts=None):
         all_files = []
-        find_command = ["find", path, "-type", "f", "-not", "-path", "'*/\.*'"]
+        find_command = [
+            "find",
+            path,
+            "-type",
+            "f",
+            "-not",
+            "-path",
+            "'*/\.*'",
+            "-printf",
+            "'%p %TY-%Tm-%Td %TH:%TM:%.2TS\n'",
+        ]
         log.info(f"Running command: {' '.join(find_command)}")
         inner_start = time.time()
         result = subprocess.run(find_command, stdout=subprocess.PIPE)
@@ -817,38 +827,38 @@ class FileSystemHandler(FileSystemEventHandler):
         # log.info(f"Working on the files found by find took {inner_end - inner_start} seconds")
         return all_files
 
-    def walk_directory_fd(
-        self, path, excluded_files=None, excluded_exts=None, last_run=None
-    ):
-        all_files = []
-        fd_command = ["fdfind", "-t", "f", ".", path]
+    # def walk_directory_fd(
+    #     self, path, excluded_files=None, excluded_exts=None, last_run=None
+    # ):
+    #     all_files = []
+    #     fd_command = ["fdfind", "-t", "f", ".", path]
 
-        log.info(f"Running command: {' '.join(fd_command)}")
-        inner_start = time.time()
-        result = subprocess.run(fd_command, stdout=subprocess.PIPE)
-        output_lines = result.stdout.decode().splitlines()
-        log.info(f"Found {len(output_lines)} files")
-        # print first 10 lines
-        for line in output_lines[:10]:
-            log.info(line)
-        inner_end = time.time()
-        log.info(f"find command took {inner_end - inner_start} seconds")
-        # log.info("Working on the files found by fd")
-        # for line in output_lines:
-        #     file_path, file_mtime = line.split(' ', 1)
-        #     file_mtime = int(file_mtime)
+    #     log.info(f"Running command: {' '.join(fd_command)}")
+    #     inner_start = time.time()
+    #     result = subprocess.run(fd_command, stdout=subprocess.PIPE)
+    #     output_lines = result.stdout.decode().splitlines()
+    #     log.info(f"Found {len(output_lines)} files")
+    #     # print first 10 lines
+    #     for line in output_lines[:10]:
+    #         log.info(line)
+    #     inner_end = time.time()
+    #     log.info(f"find command took {inner_end - inner_start} seconds")
+    #     # log.info("Working on the files found by fd")
+    #     # for line in output_lines:
+    #     #     file_path, file_mtime = line.split(' ', 1)
+    #     #     file_mtime = int(file_mtime)
 
-        #     if (excluded_files and file_path in excluded_files) or (
-        #             excluded_exts and os.path.splitext(file_path)[1] in excluded_exts):
-        #         continue
+    #     #     if (excluded_files and file_path in excluded_files) or (
+    #     #             excluded_exts and os.path.splitext(file_path)[1] in excluded_exts):
+    #     #         continue
 
-        #     try:
-        #         all_files.append((file_path, file_mtime))
-        #     except FileNotFoundError:
-        #         logging.info(f"File {file_path} not found")
-        # inner_end = time.time()
-        # log.info(f"Working on the files found by find took {inner_end - inner_start} seconds")
-        return all_files
+    #     #     try:
+    #     #         all_files.append((file_path, file_mtime))
+    #     #     except FileNotFoundError:
+    #     #         logging.info(f"File {file_path} not found")
+    #     # inner_end = time.time()
+    #     # log.info(f"Working on the files found by find took {inner_end - inner_start} seconds")
+    #     return all_files
 
     def fallback_directory_watcher(self):
         path = "/watch"
@@ -906,19 +916,19 @@ class FileSystemHandler(FileSystemEventHandler):
             f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
         )
 
-        log.info("New fd Method - Checking for new files...")
-        start = time.time()
-        # Get list of all files in directory
-        all_files = self.walk_directory_fd(
-            path,
-            excluded_files=excluded_files,
-            excluded_exts=excluded_exts,
-            last_run=last_run,
-        )
-        end = time.time()
-        log.info(
-            f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
-        )
+        # log.info("New fd Method - Checking for new files...")
+        # start = time.time()
+        # # Get list of all files in directory
+        # all_files = self.walk_directory_fd(
+        #     path,
+        #     excluded_files=excluded_files,
+        #     excluded_exts=excluded_exts,
+        #     last_run=last_run,
+        # )
+        # end = time.time()
+        # log.info(
+        #     f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
+        # )
         time.sleep(15)
         last_run = int(time.time())  # Update the last_run timestamp
 
