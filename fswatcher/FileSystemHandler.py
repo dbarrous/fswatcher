@@ -741,15 +741,9 @@ class FileSystemHandler(FileSystemEventHandler):
                 "-newermt",
                 within_timestamp,
             ]
-        log.info(f"Running command: {' '.join(find_command)}")
-        inner_start = time.time()
         result = subprocess.run(find_command, stdout=subprocess.PIPE)
         output_lines = result.stdout.decode().splitlines()
 
-        log.info(f"Found {len(output_lines)} files")
-        inner_end = time.time()
-        log.info(f"find command took {inner_end - inner_start} seconds")
-        log.info("Working on the files found by findd")
         for file_path in output_lines:
             if (excluded_files and file_path in excluded_files) or (
                 excluded_exts and os.path.splitext(file_path)[1] in excluded_exts
@@ -760,10 +754,6 @@ class FileSystemHandler(FileSystemEventHandler):
                 all_files.append((file_path))
             except FileNotFoundError:
                 logging.info(f"File {file_path} not found")
-        inner_end = time.time()
-        log.info(
-            f"Working on the files found by find took {inner_end - inner_start} seconds"
-        )
 
         return set(all_files)
 
@@ -813,6 +803,7 @@ class FileSystemHandler(FileSystemEventHandler):
         )
         log.info("Get initial Files - Done")
         log.info("\nStarting loop...")
+
         # Loop starts
         while True:
             if last_run_timestamp_str:
@@ -845,4 +836,6 @@ class FileSystemHandler(FileSystemEventHandler):
             all_files = all_files - deleted_files
             # Add new files to all_files
             all_files = all_files.union(new_files)
-            time.sleep(15)
+
+            # Sleep for 5 seconds
+            time.sleep(5)
