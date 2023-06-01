@@ -718,25 +718,6 @@ class FileSystemHandler(FileSystemEventHandler):
                 "Since allow_delete is set to False, the test file will not be deleted from S3, please delete it manually"
             )
 
-    def init_db(self):
-        conn = sqlite3.connect("fswatcher.db")
-        return conn
-
-    def update_files_info(self, conn, cur, file_info):
-        cur.execute(
-            "REPLACE INTO files (file_path, modified_time) VALUES (?, ?)",
-            (file_info["file_path"], file_info["modified_time"]),
-        )
-        conn.commit()
-
-    def delete_file_info(self, conn, cur, file_path):
-        cur.execute("DELETE FROM files WHERE file_path=?", (file_path,))
-        conn.commit()
-
-    def get_files_info(self, cur):
-        cur.execute("SELECT file_path, modified_time FROM files")
-        return {row[0]: row[1] for row in cur.fetchall()}
-
     def process_files(self, new_files, old_files):
         deleted_files = old_files - new_files
 
@@ -749,23 +730,6 @@ class FileSystemHandler(FileSystemEventHandler):
             log.info(f"Path {path} does not exist")
             return False
         return True
-
-    def walk_directory(self, path, excluded_files=None, excluded_exts=None):
-        all_files = []
-        for root, _, files in os.walk(path):
-            for file in files:
-                file_path = os.path.join(root, file)
-                if (excluded_files and file_path in excluded_files) or (
-                    excluded_exts and os.path.splitext(file)[1] in excluded_exts
-                ):
-                    continue
-                try:
-                    file_mtime = os.path.getmtime(file_path)
-                    all_files.append((file_path, file_mtime))
-                except FileNotFoundError:
-                    log.info(f"File {file_path} not found")
-
-        return all_files
 
     def walk_directory_find(
         self, path, excluded_files=None, excluded_exts=None, within_timestamp=None
@@ -812,13 +776,13 @@ class FileSystemHandler(FileSystemEventHandler):
         # Initialize excluded_files and excluded_exts as empty lists
         excluded_files = []
         excluded_exts = []
-        # if self.check_with_s3:
-        #     log.info("Checking S3 bucket for existing files...")
-        #     all_files = self._get_s3_keys(self.bucket_name)
-        #     log.info(
-        #         f"Found {len(all_files)} files in S3 bucket. Adding to db of existing files..."
-        #     )
-        #     # all_files = self.process_files(conn, cur, s3_keys, True)
+        if self.check_with_s3:
+            log.info("Checking S3 bucket for existing files...")
+            all_files = set(self._get_s3_keys(self.bucket_name))
+            log.info(
+                f"Found {len(all_files)} files in S3 bucket. Adding to db of existing files..."
+            )
+            # all_files = self.process_files(conn, cur, s3_keys, True)
 
         log.info("Starting directory watcher...")
         if not self.check_path_exists(path):
@@ -885,7 +849,7 @@ class FileSystemHandler(FileSystemEventHandler):
             last_run_timestamp_str = time.strftime(
                 "%Y-%m-%dT%H:%M:%S", time.localtime(timestamp)
             )
-            time.sleep(15)
+            time.sleep(30)
 
             # start = time.time()
             # # Dispatch events
