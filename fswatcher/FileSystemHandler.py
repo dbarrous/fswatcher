@@ -770,7 +770,6 @@ class FileSystemHandler(FileSystemEventHandler):
     def fallback_directory_watcher(self):
         path = "/watch"
 
-        all_files = set()
         last_run_timestamp_str = None
 
         # Initialize excluded_files and excluded_exts as empty lists
@@ -814,13 +813,8 @@ class FileSystemHandler(FileSystemEventHandler):
         )
         log.info("Get initial Files - Done")
         log.info("\nStarting loop...")
-
         # Loop starts
         while True:
-            log.info("\nStarting loop...")
-            log.info("Get modified files")
-            start = time.time()
-
             if last_run_timestamp_str:
                 # Get list of all files in directory
                 modified_files = self.walk_directory_find(
@@ -832,7 +826,6 @@ class FileSystemHandler(FileSystemEventHandler):
             else:
                 modified_files = set()
 
-            log.info("Get Deleted files")
             # Get list of all files in directory
             files = self.walk_directory_find(
                 path,
@@ -848,14 +841,8 @@ class FileSystemHandler(FileSystemEventHandler):
                 "%Y-%m-%dT%H:%M:%S", time.localtime(timestamp)
             )
             self._dispatch_events(list(new_files), deleted_files)
-            log.info(f"New files: {len(new_files)}")
-            log.info(f"Deleted files: {len(deleted_files)}")
             # Remove deleted files from all_files
             all_files = all_files - deleted_files
             # Add new files to all_files
             all_files = all_files.union(new_files)
-
-            end = time.time()
-            log.info(f"Time taken to process files: {end - start} seconds")
-
             time.sleep(30)
