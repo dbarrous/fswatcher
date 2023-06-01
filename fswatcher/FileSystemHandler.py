@@ -798,7 +798,7 @@ class FileSystemHandler(FileSystemEventHandler):
         result = subprocess.run(find_command, stdout=subprocess.PIPE)
         output_lines = result.stdout.decode().splitlines()
         for line in output_lines[:10]:
-            print(line)
+            log.info(line)
         log.info(f"Found {len(output_lines)} files")
         inner_end = time.time()
         log.info(f"find command took {inner_end - inner_start} seconds")
@@ -830,7 +830,7 @@ class FileSystemHandler(FileSystemEventHandler):
         log.info(f"Found {len(output_lines)} files")
         # print first 10 lines
         for line in output_lines[:10]:
-            print(line)
+            log.info(line)
         inner_end = time.time()
         log.info(f"find command took {inner_end - inner_start} seconds")
         # log.info("Working on the files found by fd")
