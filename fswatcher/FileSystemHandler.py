@@ -768,14 +768,14 @@ class FileSystemHandler(FileSystemEventHandler):
         return all_files
 
     def walk_directory_find(
-        self, path, excluded_files=None, excluded_exts=None, timestamp_str=None
+        self, path, excluded_files=None, excluded_exts=None, within_timestamp=None
     ):
         all_files = []
         find_command = ["find", path, "-type", "f", "-not", "-path", "'*/\.*'"]
-        if timestamp_str:
+        if within_timestamp:
             find_command += [
                 "-newermt",
-                timestamp_str,
+                within_timestamp,
             ]
         log.info(f"Running command: {' '.join(find_command)}")
         inner_start = time.time()
@@ -829,9 +829,7 @@ class FileSystemHandler(FileSystemEventHandler):
 
         log.info("Get initial Files")
         start = time.time()
-        # Create a new file in the watch directory
-        with open(os.path.join(path, "tests2.txt"), "w") as f:
-            f.write("Hello, World!")
+
         # Get list of all files in directory
         all_files = self.walk_directory_find(
             path, excluded_files=excluded_files, excluded_exts=excluded_exts
