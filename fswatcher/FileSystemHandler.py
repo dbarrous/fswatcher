@@ -917,16 +917,6 @@ class FileSystemHandler(FileSystemEventHandler):
             f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
         )
 
-        log.info("New Find 2 Method - Checking for new files...")
-        start = time.time()
-        # Get list of all files in directory
-        all_files = self.walk_directory_find_2(
-            path, excluded_files=excluded_files, excluded_exts=excluded_exts
-        )
-        end = time.time()
-        log.info(
-            f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
-        )
         # time.sleep(15)
         # last_run = int(time.time())  # Update the last_run timestamp
 
