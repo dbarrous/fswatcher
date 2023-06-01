@@ -792,7 +792,7 @@ class FileSystemHandler(FileSystemEventHandler):
 
     def walk_directory_find(self, path, excluded_files=None, excluded_exts=None):
         all_files = []
-        find_command = ["find", ".", path, "-type", "f", "-not", "-path", "'*/\.*'"]
+        find_command = ["find", path, "-type", "f", "-not", "-path", "'*/\.*'"]
         log.info(f"Running command: {' '.join(find_command)}")
         inner_start = time.time()
         result = subprocess.run(find_command, stdout=subprocess.PIPE)
