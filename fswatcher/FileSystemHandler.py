@@ -871,7 +871,6 @@ class FileSystemHandler(FileSystemEventHandler):
             path,
             excluded_files=excluded_files,
             excluded_exts=excluded_exts,
-            within_minutes=1,
         )
         end = time.time()
         log.info(
