@@ -768,14 +768,14 @@ class FileSystemHandler(FileSystemEventHandler):
         return all_files
 
     def walk_directory_find(
-        self, path, excluded_files=None, excluded_exts=None, within_minutes=None
+        self, path, excluded_files=None, excluded_exts=None, timestamp_str=None
     ):
         all_files = []
         find_command = ["find", path, "-type", "f", "-not", "-path", "'*/\.*'"]
-        if within_minutes:
+        if timestamp_str:
             find_command += [
-                "-mmin",
-                f"-{within_minutes}",
+                "-newermt",
+                timestamp_str,
             ]
         log.info(f"Running command: {' '.join(find_command)}")
         inner_start = time.time()
@@ -807,6 +807,7 @@ class FileSystemHandler(FileSystemEventHandler):
         path = "/watch"
 
         all_files = []
+        last_run_timestamp_str = None
 
         # Initialize excluded_files and excluded_exts as empty lists
         excluded_files = []
@@ -848,13 +849,16 @@ class FileSystemHandler(FileSystemEventHandler):
             log.info("Get modified files")
             start = time.time()
 
-            # Get list of all files in directory
-            modified_files = self.walk_directory_find(
-                path,
-                excluded_files=excluded_files,
-                excluded_exts=excluded_exts,
-                within_minutes=1,
-            )
+            if last_run_timestamp_str:
+                # Get list of all files in directory
+                modified_files = self.walk_directory_find(
+                    path,
+                    excluded_files=excluded_files,
+                    excluded_exts=excluded_exts,
+                    within_timestamp=last_run_timestamp_str,
+                )
+            else:
+                modified_files = set()
 
             log.info("Get Deleted files")
             # Get list of all files in directory
@@ -878,8 +882,12 @@ class FileSystemHandler(FileSystemEventHandler):
 
             end = time.time()
             log.info(f"Time taken to process files: {end - start} seconds")
-            time.sleep(5)
             log.info("Starting loop...\n")
+            timestamp = int(time.time())
+            last_run_timestamp_str = time.strftime(
+                "%Y-%m-%dT%H:%M:%S", time.localtime(timestamp)
+            )
+            time.sleep(15)
 
             # start = time.time()
             # # Dispatch events
