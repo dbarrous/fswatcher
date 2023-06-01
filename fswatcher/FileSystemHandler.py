@@ -865,33 +865,25 @@ class FileSystemHandler(FileSystemEventHandler):
             )
             new_files, deleted_files = self.process_files(files, all_files, True)
 
-            # Add modified files to new_files
+            # Add modified files to new_files set
             new_files = new_files.union(modified_files)
 
             log.info(f"New files: {len(new_files)}")
             log.info(f"Deleted files: {len(deleted_files)}")
 
-            # Save new all_files
-            all_files = new_files
+            # Remove deleted files from all_files
+            all_files = all_files - deleted_files
+            # Add new files to all_files
+            all_files = all_files.union(new_files)
+
             end = time.time()
             log.info(f"Time taken to process files: {end - start} seconds")
             time.sleep(5)
             log.info("Starting loop...\n")
 
-        # start = time.time()
-        # log.info("Processing files...")
-        # # Check for new, updated, and deleted files
-        # new_files, deleted_files = self.process_files(new_files, all_files)
-        # end = time.time()
-        # log.info(f"Time taken to process files: {end - start} seconds")
-        # log.info(f"New files: {len(new_files)}")
-        # log.info(f"Deleted files: {len(deleted_files)}")
-        # # Size in megabytes of db
-        # log.info(f"DB size: {os.path.getsize('fswatcher.db') / 1000000} MB")
-
-        # start = time.time()
-        # # Dispatch events
-        # log.info("Dispatching events...")
-        # self._dispatch_events(new_files, deleted_files)
-        # end = time.time()
-        # log.info(f"Time taken to dispatch events: {end - start} seconds")
+            # start = time.time()
+            # # Dispatch events
+            # log.info("Dispatching events...")
+            # self._dispatch_events(new_files, deleted_files)
+            # end = time.time()
+            # log.info(f"Time taken to dispatch events: {end - start} seconds")
