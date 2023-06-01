@@ -737,34 +737,19 @@ class FileSystemHandler(FileSystemEventHandler):
         cur.execute("SELECT file_path, modified_time FROM files")
         return {row[0]: row[1] for row in cur.fetchall()}
 
-    def check_for_changes(self, conn, cur, current_files_info):
-        new_files = []
+    def process_files(self, new_files, old_files):
+        # Compare old files with new files
         deleted_files = []
-        previous_files_info = self.get_files_info(cur)
+        for file_path in old_files:
+            if file_path not in new_files:
+                deleted_files.append(file_path)
 
-        for file, mtime in current_files_info.items():
-            if file not in previous_files_info or mtime > previous_files_info[file]:
-                new_files.append(file)
-                self.update_files_info(
-                    conn, cur, {"file_path": file, "modified_time": mtime}
-                )
+        # Compare new files with old files
+        new_files = []
+        for file_path in old_files:
+            if file_path not in new_files:
+                new_files.append(file_path)
 
-        for file in previous_files_info:
-            if file not in current_files_info:
-                deleted_files.append(file)
-                self.delete_file_info(conn, cur, file)
-
-        conn.commit()  # Commit the changes after all operations are complete
-        return new_files, deleted_files
-
-    def process_files(self, conn, cur, all_files, s3=False):
-        if s3:
-            # Compatible modification time for S3 in float
-            datetime_now = datetime.now().timestamp()
-            current_files_info = {file_path: datetime_now for file_path in all_files}
-        else:
-            current_files_info = {file_path: mtime for file_path, mtime in all_files}
-        new_files, deleted_files = self.check_for_changes(conn, cur, current_files_info)
         return new_files, deleted_files
 
     def check_path_exists(self, path):
@@ -832,28 +817,19 @@ class FileSystemHandler(FileSystemEventHandler):
 
     def fallback_directory_watcher(self):
         path = "/watch"
-        check_interval = 5
 
-        # Create the table if it doesn't exist
-        conn = self.init_db()
-        cur = conn.cursor()
-        cur.execute(
-            """CREATE TABLE IF NOT EXISTS files (
-                        file_path TEXT PRIMARY KEY,
-                        modified_time REAL)"""
-        )
-        conn.commit()
+        all_files = []
 
         # Initialize excluded_files and excluded_exts as empty lists
         excluded_files = []
         excluded_exts = []
-        if self.check_with_s3:
-            log.info("Checking S3 bucket for existing files...")
-            s3_keys = self._get_s3_keys(self.bucket_name)
-            log.info(
-                f"Found {len(s3_keys)} files in S3 bucket. Adding to db of existing files..."
-            )
-            self.process_files(conn, cur, s3_keys, True)
+        # if self.check_with_s3:
+        #     log.info("Checking S3 bucket for existing files...")
+        #     all_files = self._get_s3_keys(self.bucket_name)
+        #     log.info(
+        #         f"Found {len(all_files)} files in S3 bucket. Adding to db of existing files..."
+        #     )
+        #     # all_files = self.process_files(conn, cur, s3_keys, True)
 
         log.info("Starting directory watcher...")
         if not self.check_path_exists(path):
@@ -861,22 +837,24 @@ class FileSystemHandler(FileSystemEventHandler):
             return
         else:
             log.info(f"Monitoring path: {path}")
-        last_run = None
 
-        # Wait for 60 seconds before checking for new files again
-        log.info("Original - Checking for new files...")
-        start = time.time()
-        # Get list of all files in directory
-        all_files = self.walk_directory(
-            path, excluded_files=excluded_files, excluded_exts=excluded_exts
-        )
-        end = time.time()
-        log.info(
-            f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
-        )
+        # # Wait for 60 seconds before checking for new files again
+        # log.info("Original - Checking for new files...")
+        # start = time.time()
+        # # Get list of all files in directory
+        # all_files = self.walk_directory(
+        #     path, excluded_files=excluded_files, excluded_exts=excluded_exts
+        # )
+        # end = time.time()
+        # log.info(
+        #     f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
+        # )
 
         log.info("New Find Method - Checking for new files...")
         start = time.time()
+        # Create a new file in the watch directory
+        with open(os.path.join(path, "tests2.txt"), "w") as f:
+            f.write("Hello, World!")
         # Get list of all files in directory
         all_files = self.walk_directory_find(
             path, excluded_files=excluded_files, excluded_exts=excluded_exts
@@ -888,39 +866,39 @@ class FileSystemHandler(FileSystemEventHandler):
 
         log.info("New Find Method - Checking for modified files...")
         start = time.time()
+        # Create a new file in the watch directory
+        with open(os.path.join(path, "tests.txt"), "w") as f:
+            f.write("Hello, World!")
 
+        # deelte tests2.txt
+        os.remove(os.path.join(path, "tests2.txt"))
         # Get list of all files in directory
-        all_files = self.walk_directory_find(
+        modified_files = self.walk_directory_find(
             path,
             excluded_files=excluded_files,
             excluded_exts=excluded_exts,
-            within_minutes=15,
+            within_minutes=1,
         )
         end = time.time()
         log.info(
             f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
         )
 
-        # Create a new file in the watch directory
-        with open(os.path.join(path, "test.txt"), "w") as f:
-            f.write("Hello, World!")
+        new_files, deleted_files = self.process_files(modified_files, all_files)
+        log.info(f"New files: {len(new_files)}")
 
         log.info("New Find Method - Checking for new files...")
         start = time.time()
         # Get list of all files in directory
-        all_files = self.walk_directory_find(
+        deleted_new_files = self.walk_directory_find(
             path,
             excluded_files=excluded_files,
             excluded_exts=excluded_exts,
-            within_minutes=15,
         )
         end = time.time()
         log.info(
             f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
         )
-
-        # time.sleep(15)
-        # last_run = int(time.time())  # Update the last_run timestamp
 
         # start = time.time()
         # log.info("Processing files...")
