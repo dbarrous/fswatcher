@@ -790,9 +790,16 @@ class FileSystemHandler(FileSystemEventHandler):
 
         return all_files
 
-    def walk_directory_find(self, path, excluded_files=None, excluded_exts=None):
+    def walk_directory_find(
+        self, path, excluded_files=None, excluded_exts=None, within_minutes=None
+    ):
         all_files = []
         find_command = ["find", path, "-type", "f", "-not", "-path", "'*/\.*'"]
+        if within_minutes:
+            find_command += [
+                "-mmin",
+                f"-{within_minutes}",
+            ]
         log.info(f"Running command: {' '.join(find_command)}")
         inner_start = time.time()
         result = subprocess.run(find_command, stdout=subprocess.PIPE)
@@ -810,8 +817,7 @@ class FileSystemHandler(FileSystemEventHandler):
                 continue
 
             try:
-                file_mtime = os.path.getmtime(file_path)
-                all_files.append((file_path, file_mtime))
+                all_files.append((file_path))
             except FileNotFoundError:
                 logging.info(f"File {file_path} not found")
         inner_end = time.time()
@@ -822,43 +828,6 @@ class FileSystemHandler(FileSystemEventHandler):
         log.info("First 10 files:")
         for file_path, mtime in all_files[:10]:
             log.info(f"{file_path} - {mtime}")
-        return all_files
-
-    def walk_directory_find_2(self, path, excluded_files=None, excluded_exts=None):
-        all_files = []
-        find_command = [
-            "find",
-            path,
-            "-type",
-            "f",
-            "-not",
-            "-path",
-            "'*/\.*'",
-            "-printf",
-            "'%p %TY-%Tm-%Td %TH:%TM:%.2TS\n'",
-        ]
-        log.info(f"Running command: {' '.join(find_command)}")
-        inner_start = time.time()
-        result = subprocess.run(find_command, stdout=subprocess.PIPE)
-        output_lines = result.stdout.decode().splitlines()
-        for line in output_lines[:10]:
-            log.info(line)
-        log.info(f"Found {len(output_lines)} files")
-        inner_end = time.time()
-        log.info(f"find command took {inner_end - inner_start} seconds")
-        # log.info("Working on the files found by findd")
-        # for file_path in file_paths:
-        #     if (excluded_files and file_path in excluded_files) or (
-        #             excluded_exts and os.path.splitext(file_path)[1] in excluded_exts):
-        #         continue
-
-        #     try:
-        #         file_mtime = os.path.getmtime(file_path)
-        #         all_files.append((file_path, file_mtime))
-        #     except FileNotFoundError:
-        #         logging.info(f"File {file_path} not found")
-        # inner_end = time.time()
-        # log.info(f"Working on the files found by find took {inner_end - inner_start} seconds")
         return all_files
 
     def fallback_directory_watcher(self):
@@ -923,7 +892,7 @@ class FileSystemHandler(FileSystemEventHandler):
         start = time.time()
         log.info("Processing files...")
         # Check for new, updated, and deleted files
-        new_files, deleted_files = self.process_files(conn, cur, all_files)
+        new_files, deleted_files = self.process_files(new_files, all_files)
         end = time.time()
         log.info(f"Time taken to process files: {end - start} seconds")
         log.info(f"New files: {len(new_files)}")
