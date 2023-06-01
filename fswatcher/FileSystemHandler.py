@@ -813,10 +813,11 @@ class FileSystemHandler(FileSystemEventHandler):
             f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
         )
         log.info("Get initial Files - Done")
-        log.info("Starting loop...\n")
+        log.info("\nStarting loop...")
 
         # Loop starts
         while True:
+            log.info("\nStarting loop...")
             log.info("Get modified files")
             start = time.time()
 
@@ -853,16 +854,8 @@ class FileSystemHandler(FileSystemEventHandler):
 
             end = time.time()
             log.info(f"Time taken to process files: {end - start} seconds")
-            log.info("Starting loop...\n")
             timestamp = int(time.time())
             last_run_timestamp_str = time.strftime(
                 "%Y-%m-%dT%H:%M:%S", time.localtime(timestamp)
             )
             time.sleep(30)
-
-            # start = time.time()
-            # # Dispatch events
-            # log.info("Dispatching events...")
-            # self._dispatch_events(new_files, deleted_files)
-            # end = time.time()
-            # log.info(f"Time taken to dispatch events: {end - start} seconds")
