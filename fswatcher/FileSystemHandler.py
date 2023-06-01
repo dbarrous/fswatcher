@@ -744,7 +744,7 @@ class FileSystemHandler(FileSystemEventHandler):
         deleted_files = set() if modified_time_only else old_files_set - new_files_set
         new_files = new_files_set - old_files_set
 
-        return list(new_files), list(deleted_files)
+        return new_files, deleted_files
 
     def check_path_exists(self, path):
         if not Path(path).exists():
