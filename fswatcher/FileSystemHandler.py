@@ -886,19 +886,52 @@ class FileSystemHandler(FileSystemEventHandler):
             f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
         )
 
+        log.info("New Find Method - Checking for modified files...")
+        start = time.time()
+
+        # Get list of all files in directory
+        all_files = self.walk_directory_find(
+            path,
+            excluded_files=excluded_files,
+            excluded_exts=excluded_exts,
+            within_minutes=15,
+        )
+        end = time.time()
+        log.info(
+            f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
+        )
+
+        # Create a new file in the watch directory
+        with open(os.path.join(path, "test.txt"), "w") as f:
+            f.write("Hello, World!")
+
+        log.info("New Find Method - Checking for new files...")
+        start = time.time()
+        # Get list of all files in directory
+        all_files = self.walk_directory_find(
+            path,
+            excluded_files=excluded_files,
+            excluded_exts=excluded_exts,
+            within_minutes=15,
+        )
+        end = time.time()
+        log.info(
+            f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
+        )
+
         # time.sleep(15)
         # last_run = int(time.time())  # Update the last_run timestamp
 
-        start = time.time()
-        log.info("Processing files...")
-        # Check for new, updated, and deleted files
-        new_files, deleted_files = self.process_files(new_files, all_files)
-        end = time.time()
-        log.info(f"Time taken to process files: {end - start} seconds")
-        log.info(f"New files: {len(new_files)}")
-        log.info(f"Deleted files: {len(deleted_files)}")
-        # Size in megabytes of db
-        log.info(f"DB size: {os.path.getsize('fswatcher.db') / 1000000} MB")
+        # start = time.time()
+        # log.info("Processing files...")
+        # # Check for new, updated, and deleted files
+        # new_files, deleted_files = self.process_files(new_files, all_files)
+        # end = time.time()
+        # log.info(f"Time taken to process files: {end - start} seconds")
+        # log.info(f"New files: {len(new_files)}")
+        # log.info(f"Deleted files: {len(deleted_files)}")
+        # # Size in megabytes of db
+        # log.info(f"DB size: {os.path.getsize('fswatcher.db') / 1000000} MB")
 
         # start = time.time()
         # # Dispatch events
