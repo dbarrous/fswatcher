@@ -843,6 +843,7 @@ class FileSystemHandler(FileSystemEventHandler):
             f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
         )
         log.info("Get initial Files - Done")
+        log.info("Starting loop...\n")
 
         # Loop starts
         while True:
@@ -877,6 +878,7 @@ class FileSystemHandler(FileSystemEventHandler):
             end = time.time()
             log.info(f"Time taken to process files: {end - start} seconds")
             time.sleep(5)
+            log.info("Starting loop...\n")
 
         # start = time.time()
         # log.info("Processing files...")
