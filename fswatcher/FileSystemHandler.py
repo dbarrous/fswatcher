@@ -927,19 +927,19 @@ class FileSystemHandler(FileSystemEventHandler):
         log.info(
             f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
         )
-        time.sleep(15)
-        last_run = int(time.time())  # Update the last_run timestamp
+        # time.sleep(15)
+        # last_run = int(time.time())  # Update the last_run timestamp
 
-        # start = time.time()
-        # log.info("Processing files...")
-        # # Check for new, updated, and deleted files
-        # new_files, deleted_files = self.process_files(conn, cur, all_files)
-        # end = time.time()
-        # log.info(f"Time taken to process files: {end - start} seconds")
-        # log.info(f"New files: {len(new_files)}")
-        # log.info(f"Deleted files: {len(deleted_files)}")
-        # # Size in megabytes of db
-        # log.info(f"DB size: {os.path.getsize('fswatcher.db') / 1000000} MB")
+        start = time.time()
+        log.info("Processing files...")
+        # Check for new, updated, and deleted files
+        new_files, deleted_files = self.process_files(conn, cur, all_files)
+        end = time.time()
+        log.info(f"Time taken to process files: {end - start} seconds")
+        log.info(f"New files: {len(new_files)}")
+        log.info(f"Deleted files: {len(deleted_files)}")
+        # Size in megabytes of db
+        log.info(f"DB size: {os.path.getsize('fswatcher.db') / 1000000} MB")
 
         # start = time.time()
         # # Dispatch events
