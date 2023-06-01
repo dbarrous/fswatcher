@@ -737,11 +737,11 @@ class FileSystemHandler(FileSystemEventHandler):
         cur.execute("SELECT file_path, modified_time FROM files")
         return {row[0]: row[1] for row in cur.fetchall()}
 
-    def process_files(self, new_files, old_files):
+    def process_files(self, new_files, old_files, modified_time_only=False):
         new_files_set = set(new_files)
         old_files_set = set(old_files)
 
-        deleted_files = old_files_set - new_files_set
+        deleted_files = set() if modified_time_only else old_files_set - new_files_set
         new_files = new_files_set - old_files_set
 
         return list(new_files), list(deleted_files)
@@ -877,7 +877,7 @@ class FileSystemHandler(FileSystemEventHandler):
             f"Time taken to walk directory: {end - start} seconds, files: {len(all_files)}"
         )
 
-        new_files, deleted_files = self.process_files(modified_files, all_files)
+        new_files, deleted_files = self.get_deleted(modified_files, all_files)
         log.info(f"New files: {len(new_files)}")
         log.info(f"Deleted files: {len(deleted_files)}")
 
