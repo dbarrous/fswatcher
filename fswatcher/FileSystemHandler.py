@@ -739,6 +739,7 @@ class FileSystemHandler(FileSystemEventHandler):
 
     def process_files(self, new_files, old_files, modified_time_only=False):
         deleted_files = set() if modified_time_only else old_files - new_files
+
         new_files = new_files - old_files
 
         return new_files, deleted_files
@@ -871,7 +872,7 @@ class FileSystemHandler(FileSystemEventHandler):
             log.info(f"Deleted files: {len(deleted_files)}")
 
             # Save new all_files
-            all_files = modified_files
+            all_files = new_files
             end = time.time()
             log.info(f"Time taken to process files: {end - start} seconds")
             time.sleep(5)
