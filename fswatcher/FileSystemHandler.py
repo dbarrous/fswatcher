@@ -737,8 +737,8 @@ class FileSystemHandler(FileSystemEventHandler):
         cur.execute("SELECT file_path, modified_time FROM files")
         return {row[0]: row[1] for row in cur.fetchall()}
 
-    def process_files(self, new_files, old_files, modified_time_only=False):
-        deleted_files = set() if modified_time_only else old_files - new_files
+    def process_files(self, new_files, old_files):
+        deleted_files = old_files - new_files
 
         new_files = new_files - old_files
 
@@ -865,7 +865,7 @@ class FileSystemHandler(FileSystemEventHandler):
                 excluded_files=excluded_files,
                 excluded_exts=excluded_exts,
             )
-            new_files, deleted_files = self.process_files(files, all_files, True)
+            new_files, deleted_files = self.process_files(files, all_files)
 
             # Add modified files to new_files set
             new_files = new_files.union(modified_files)
