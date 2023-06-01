@@ -845,4 +845,4 @@ class FileSystemHandler(FileSystemEventHandler):
             all_files = all_files - deleted_files
             # Add new files to all_files
             all_files = all_files.union(new_files)
-            time.sleep(30)
+            time.sleep(15)
