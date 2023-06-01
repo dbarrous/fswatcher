@@ -780,7 +780,7 @@ class FileSystemHandler(FileSystemEventHandler):
             log.info("Checking S3 bucket for existing files...")
             s3_set = set(self._get_s3_keys(self.bucket_name))
             log.info(
-                f"Found {len(all_files)} files in S3 bucket. Adding to db of existing files..."
+                f"Found {len(s3_set)} files in S3 bucket. Adding to db of existing files..."
             )
         log.info("Starting directory watcher...")
         if not self.check_path_exists(path):
@@ -843,7 +843,10 @@ class FileSystemHandler(FileSystemEventHandler):
 
             # Add modified files to new_files set
             new_files = new_files.union(modified_files)
-
+            timestamp = int(time.time())
+            last_run_timestamp_str = time.strftime(
+                "%Y-%m-%dT%H:%M:%S", time.localtime(timestamp)
+            )
             self._dispatch_events(list(new_files), deleted_files)
             log.info(f"New files: {len(new_files)}")
             log.info(f"Deleted files: {len(deleted_files)}")
@@ -854,8 +857,5 @@ class FileSystemHandler(FileSystemEventHandler):
 
             end = time.time()
             log.info(f"Time taken to process files: {end - start} seconds")
-            timestamp = int(time.time())
-            last_run_timestamp_str = time.strftime(
-                "%Y-%m-%dT%H:%M:%S", time.localtime(timestamp)
-            )
+
             time.sleep(30)
