@@ -792,12 +792,12 @@ class FileSystemHandler(FileSystemEventHandler):
 
     def walk_directory_find(self, path, excluded_files=None, excluded_exts=None):
         all_files = []
-        find_command = ["find", path, "-type", "f"]
+        find_command = ["find", path, "--type", "f"]
         log.info(f"Running command: {' '.join(find_command)}")
         inner_start = time.time()
         result = subprocess.run(find_command, stdout=subprocess.PIPE)
         output_lines = result.stdout.decode().splitlines()
-        # log.info(f"Found {len(output_lines)} files")
+        log.info(f"Found {len(output_lines)} files")
         inner_end = time.time()
         log.info(f"find command took {inner_end - inner_start} seconds")
         # log.info("Working on the files found by findd")
@@ -819,13 +819,13 @@ class FileSystemHandler(FileSystemEventHandler):
         self, path, excluded_files=None, excluded_exts=None, last_run=None
     ):
         all_files = []
-        fd_command = ["fdfind", ".", path]
+        fd_command = ["fdfind", "-t", "f", ".", path]
 
         log.info(f"Running command: {' '.join(fd_command)}")
         inner_start = time.time()
         result = subprocess.run(fd_command, stdout=subprocess.PIPE)
         output_lines = result.stdout.decode().splitlines()
-        # log.info(f"Found {len(output_lines)} files")
+        log.info(f"Found {len(output_lines)} files")
         inner_end = time.time()
         log.info(f"find command took {inner_end - inner_start} seconds")
         # log.info("Working on the files found by fd")
